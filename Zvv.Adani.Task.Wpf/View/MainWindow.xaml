@@ -1,0 +1,81 @@
+﻿<Window x:Class="Zvv.Adani.Task.Wpf.View.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Zvv.Adani.Task.Wpf.View"
+        xmlns:vm="clr-namespace:Zvv.Adani.Task.Wpf.ViewModel"
+        xmlns:converters="clr-namespace:Zvv.Adani.Task.Wpf.ViewModel.Converters"
+        mc:Ignorable="d"
+        Title="Sums of bytes of files in a directory" Height="450" Width="800">
+    <Window.DataContext>
+        <vm:MainWindowViewModel/>
+    </Window.DataContext>
+    <Window.Resources>
+        <converters:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
+        <converters:IsRunningToStartButtonVisibilityConverter x:Key="IsRunningToStartButtonVisibilityConverter"/>
+        <converters:IsRunningToStopButtonVisibilityConverter x:Key="IsRunningToStopButtonVisibilityConverter"/>
+        <converters:StatusToStringConverter x:Key="StatusToStringConverter"/>
+        <Style x:Key="MarginableElement" TargetType="FrameworkElement">
+            <Setter Property="Margin" Value="2"/>
+        </Style>
+        <Style x:Key="RightTextAlignment" TargetType="TextBlock">
+            <Setter Property="HorizontalAlignment" Value="Right" />
+        </Style>
+    </Window.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="0" Style="{StaticResource ResourceKey=MarginableElement}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Label Grid.Column="0" Style="{StaticResource ResourceKey=MarginableElement}" 
+                    IsEnabled="{Binding IsProcessing, Converter={StaticResource InverseBooleanConverter}}" Content="Directory name:"/>
+            <TextBox Grid.Column="1" Style="{StaticResource ResourceKey=MarginableElement}" VerticalContentAlignment="Center"
+                    IsEnabled="{Binding IsProcessing, Converter={StaticResource InverseBooleanConverter}}" Text="{Binding DirectoryName}"/>
+            <Button Grid.Column="2" Width="70" Style="{StaticResource ResourceKey=MarginableElement}" 
+                    IsEnabled="{Binding IsProcessing, Converter={StaticResource InverseBooleanConverter}}" Content="Browse…" Command="{Binding BrowseCommand}"
+                    CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}"/>
+            <Button Grid.Column="3" Width="100" Style="{StaticResource ResourceKey=MarginableElement}"
+                    Visibility="{Binding IsProcessing, Converter={StaticResource IsRunningToStopButtonVisibilityConverter}}"
+                    IsEnabled="{Binding IsStopping, Converter={StaticResource InverseBooleanConverter}}"
+                    Content="Stop" Command="{Binding StopCommand}"/>
+            <Button Grid.Column="3" Width="100" Style="{StaticResource ResourceKey=MarginableElement}"
+                    Visibility="{Binding IsProcessing, Converter={StaticResource IsRunningToStartButtonVisibilityConverter}}" 
+                    Content="Apply" Command="{Binding ApplyCommand}"/>
+            <ProgressBar Grid.Column="4" Width="30" Style="{StaticResource ResourceKey=MarginableElement}" IsIndeterminate="{Binding IsProcessing}"/>
+        </Grid>
+        <DataGrid Grid.Row="1" Grid.ColumnSpan="4" ItemsSource="{Binding CurrentGridDataSource}" AutoGenerateColumns="False" 
+                  IsReadOnly="True" HeadersVisibility="Column">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="#" Width="0.1*" ElementStyle="{StaticResource RightTextAlignment}">
+                    <DataGridTextColumn.Binding>
+                        <MultiBinding StringFormat="{}{0}/{1}">
+                            <Binding Path="Number"/>
+                            <Binding RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}" Path="DataContext.FilesCount"/>
+                        </MultiBinding>
+                    </DataGridTextColumn.Binding>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="File name" Width="*" Binding="{Binding Data.FileName}"/>
+                <DataGridTextColumn Header="Sum" Width="0.2*" Binding="{Binding Data.SumOfBytes, StringFormat=N0}" ElementStyle="{StaticResource RightTextAlignment}"/>
+            </DataGrid.Columns>
+        </DataGrid>
+        <StatusBar Grid.Row="2">
+            <StatusBarItem>
+                <MultiBinding Converter="{StaticResource StatusToStringConverter}">
+                    <Binding Path="IsProcessing"/>
+                    <Binding Path="IsStopping"/>
+                </MultiBinding>
+            </StatusBarItem>
+        </StatusBar>
+    </Grid>
+</Window>
